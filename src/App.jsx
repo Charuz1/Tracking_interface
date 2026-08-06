@@ -192,6 +192,7 @@ export default function App() {
             gestureState={gestureState}
             enabled={true}
             onLetterPopped={handleLetterPopped}
+            targetWord={targetWord}
           />
 
           {/* Webcam + hand skeleton overlay */}

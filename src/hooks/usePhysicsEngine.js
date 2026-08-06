@@ -23,13 +23,31 @@ const BODY_COUNT = 15
  * @param {{ gesture, palmCenter, indexTip, swipeDir }} gestureState
  * @param {boolean} enabled
  * @param {Function} onLetterPopped - callback when user pinches/pops a letter
+ * @param {string} targetWord - current word to spell
  */
-export function usePhysicsEngine(canvasRef, gestureState, enabled, onLetterPopped) {
+export function usePhysicsEngine(canvasRef, gestureState, enabled, onLetterPopped, targetWord) {
   const engineRef  = useRef(null)
   const renderRef  = useRef(null)
   const runnerRef  = useRef(null)
   const bodiesRef  = useRef([])
-  const isPinchedRef = useRef(false)
+  
+  const targetWordRef = useRef(targetWord)
+  const lastPopTimeRef = useRef(0)
+
+  // Sync target word to ref
+  useEffect(() => {
+    targetWordRef.current = targetWord
+  }, [targetWord])
+
+  // Get random letter with a high probability of matching target word letters
+  const getRandomLetter = useCallback(() => {
+    const word = targetWordRef.current
+    if (word && Math.random() < 0.6) {
+      const letters = word.split('')
+      return letters[Math.floor(Math.random() * letters.length)]
+    }
+    return ALPHABET[Math.floor(Math.random() * ALPHABET.length)]
+  }, [])
 
   // ── Spawn bodies ───────────────────────────────────────────────────
   const spawnBodies = useCallback((width, height) => {
@@ -48,7 +66,7 @@ export function usePhysicsEngine(canvasRef, gestureState, enabled, onLetterPoppe
       })
 
       body._theme = theme
-      body._letter = ALPHABET[Math.floor(Math.random() * ALPHABET.length)]
+      body._letter = getRandomLetter()
       
       // Give random initial velocity for floaty feel
       Body.setVelocity(body, {
@@ -58,7 +76,7 @@ export function usePhysicsEngine(canvasRef, gestureState, enabled, onLetterPoppe
       bodies.push(body)
     }
     return bodies
-  }, [])
+  }, [getRandomLetter])
 
   // ── Init engine ────────────────────────────────────────────────────
   useEffect(() => {
@@ -173,21 +191,27 @@ export function usePhysicsEngine(canvasRef, gestureState, enabled, onLetterPoppe
     const px = (1 - palmCenter.x) * W
     const py = palmCenter.y * H
 
-    if (gesture === 'open') {
-      isPinchedRef.current = false
-      applyRepulsion(bodies, { x: px, y: py }, 180, 0.03)
-    } else if (gesture === 'pinch' && indexTip) {
-      const tipPx = (1 - indexTip.x) * W
-      const tipPy = indexTip.y * H
+    // Determine hand position for bubble collision (indexTip prioritized)
+    let handX = null
+    let handY = null
+    if (indexTip) {
+      handX = (1 - indexTip.x) * W
+      handY = indexTip.y * H
+    } else if (palmCenter) {
+      handX = px
+      handY = py
+    }
 
-      // Detect popping a letter
-      if (!isPinchedRef.current) {
+    // Support both 'pinch' and 'open' palm gestures to read/pop letters
+    if (handX !== null && handY !== null && (gesture === 'pinch' || gesture === 'open')) {
+      const now = Date.now()
+      if (now - lastPopTimeRef.current > 400) {
         let nearestBody = null
-        let minDistance = 50 // collision threshold in pixels
+        let minDistance = 55 // collision radius in pixels
 
         bodies.forEach((body) => {
-          const dx = body.position.x - tipPx
-          const dy = body.position.y - tipPy
+          const dx = body.position.x - handX
+          const dy = body.position.y - handY
           const dist = Math.sqrt(dx * dx + dy * dy)
           if (dist < minDistance) {
             nearestBody = body
@@ -196,7 +220,7 @@ export function usePhysicsEngine(canvasRef, gestureState, enabled, onLetterPoppe
         })
 
         if (nearestBody) {
-          isPinchedRef.current = true
+          lastPopTimeRef.current = now
           if (onLetterPopped) {
             onLetterPopped(nearestBody._letter)
           }
@@ -206,25 +230,29 @@ export function usePhysicsEngine(canvasRef, gestureState, enabled, onLetterPoppe
             x: 80 + Math.random() * (W - 160),
             y: H + 50
           })
-          nearestBody._letter = ALPHABET[Math.floor(Math.random() * ALPHABET.length)]
+          nearestBody._letter = getRandomLetter()
           Body.setVelocity(nearestBody, {
             x: (Math.random() - 0.5) * 2,
             y: -2 - Math.random() * 2,
           })
         }
       }
+    }
 
+    // Apply general physics forces
+    if (gesture === 'open') {
+      applyRepulsion(bodies, { x: px, y: py }, 180, 0.03)
+    } else if (gesture === 'pinch' && indexTip) {
+      const tipPx = (1 - indexTip.x) * W
+      const tipPy = indexTip.y * H
       applyAttraction(bodies, { x: tipPx, y: tipPy }, 140, 0.05)
     } else if (gesture === 'swipe' && swipeDir) {
-      isPinchedRef.current = false
       applyImpulse(bodies, { x: px, y: py }, {
         dx: -swipeDir.dx, // mirror X
         dy: swipeDir.dy,
       }, 220)
-    } else {
-      isPinchedRef.current = false
     }
-  }, [gestureState, enabled, onLetterPopped])
+  }, [gestureState, enabled, onLetterPopped, getRandomLetter])
 
   return { bodiesRef }
 }
