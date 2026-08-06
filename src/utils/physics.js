@@ -73,7 +73,7 @@ export function applyImpulse(bodies, origin, impulse, radius = 200) {
 /**
  * Clamp bodies that escape the viewport back into bounds
  */
-export function clampBodies(bodies, width, height, padding = 60) {
+export function clampBodies(bodies, width, height, padding = 60, topPadding = 60) {
   bodies.forEach((body) => {
     let { x, y } = body.position
     let vx = body.velocity.x
@@ -82,7 +82,7 @@ export function clampBodies(bodies, width, height, padding = 60) {
 
     if (x < padding)         { x = padding;         vx = Math.abs(vx) * 0.5; clamped = true }
     if (x > width - padding) { x = width - padding; vx = -Math.abs(vx) * 0.5; clamped = true }
-    if (y < padding)         { y = padding;         vy = Math.abs(vy) * 0.5; clamped = true }
+    if (y < topPadding)      { y = topPadding;      vy = Math.abs(vy) * 0.5; clamped = true }
     if (y > height - padding){ y = height - padding;vy = -Math.abs(vy) * 0.5; clamped = true }
 
     if (clamped) {

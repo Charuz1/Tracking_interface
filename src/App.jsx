@@ -58,28 +58,29 @@ export default function App() {
     if (isWrong) return // prevent typing during error penalty flash
 
     setTypedText((prev) => {
-      const nextText = prev + char
-      // Check if word completed
-      if (nextText === targetWord) {
-        setScore((s) => s + 10)
-        // Select next word
-        setTimeout(() => {
-          setTargetWord(WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)])
-          setTypedText('')
-        }, 300)
-        return nextText
-      }
+      // Check if this letter is the correct next character in the target word
+      const nextExpectedChar = targetWord[prev.length]
 
-      // If typed wrong letters
-      if (!targetWord.startsWith(nextText) || nextText.length >= targetWord.length) {
+      if (char === nextExpectedChar) {
+        const nextText = prev + char
+        // Check if word completed
+        if (nextText === targetWord) {
+          setScore((s) => s + 10)
+          // Select next word
+          setTimeout(() => {
+            setTargetWord(WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)])
+            setTypedText('')
+          }, 300)
+        }
+        return nextText
+      } else {
+        // Trigger temporary wrong flash/shake feedback, but DO NOT reset already typed correct letters
         setIsWrong(true)
         setTimeout(() => {
-          setTypedText('')
           setIsWrong(false)
-        }, 1000)
+        }, 500)
+        return prev
       }
-      
-      return nextText
     })
   }, [targetWord, isWrong])
 

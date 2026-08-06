@@ -151,7 +151,7 @@ export function usePhysicsEngine(canvasRef, gestureState, enabled, onLetterPoppe
 
     // Clamp bodies loop
     const clampLoop = setInterval(() => {
-      clampBodies(bodiesRef.current, W, H, 50)
+      clampBodies(bodiesRef.current, W, H, 50, 125)
     }, 100)
 
     // Handle resize
