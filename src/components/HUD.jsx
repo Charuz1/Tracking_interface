@@ -94,7 +94,7 @@ export default function HUD({
       </div>
 
       {/* ── Bottom bar ───────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%' }}>
+      <div className="hud-bottom-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%' }}>
         {/* Gesture badge */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: '190px' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.1em' }}>
@@ -110,7 +110,7 @@ export default function HUD({
 
         {/* Word Display Panel in the bottom center */}
         <div
-          className={`hud-panel glass-card ${isWrong ? 'shake' : ''}`}
+          className={`hud-panel glass-card hud-panel-word ${isWrong ? 'shake' : ''}`}
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -179,7 +179,7 @@ export default function HUD({
         </div>
 
         {/* Legend */}
-        <div className="hud-panel" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: '190px' }}>
+        <div className="hud-panel hud-legend-hide" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: '190px' }}>
           <LegendRow color="#00f5ff" label="✋ Open Palm" action="Repel letters" />
           <LegendRow color="#a855f7" label="🤏 Pinch"     action="Pop next letter" />
           <LegendRow color="#f43f5e" label="👋 Swipe"     action="Toss letters" />

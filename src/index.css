@@ -277,3 +277,30 @@ html, body, #root {
   animation: letterPop 0.2s ease-out;
 }
 
+/* ─── Mobile Responsiveness for HUD ──────────────────────────────── */
+@media (max-width: 768px) {
+  .hud-bottom-bar {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.6rem !important;
+    width: 100% !important;
+  }
+  
+  .hud-panel-word {
+    order: -1; /* Show the word panel on top */
+    width: 100% !important;
+    min-width: 260px !important;
+    max-width: 320px !important;
+    padding: 0.5rem 1rem !important;
+  }
+
+  .hud-panel-word span {
+    font-size: 1.25rem !important; /* Slightly smaller letters on mobile */
+  }
+
+  .hud-legend-hide {
+    display: none !important; /* Hide legend on mobile to clear screen space */
+  }
+}
+
+
