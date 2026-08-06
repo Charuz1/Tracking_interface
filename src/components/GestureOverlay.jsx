@@ -42,8 +42,7 @@ export default function GestureOverlay({ onGestureUpdate, enabled }) {
           height: '100%',
           objectFit: 'cover',
           transform: 'scaleX(-1)',   // mirror
-          opacity: 0.08,             // very dim — purely ambient
-          filter: 'saturate(0) brightness(1.4)',
+          opacity: 0.6,             // clearly visible camera feed
         }}
         aria-hidden="true"
       />

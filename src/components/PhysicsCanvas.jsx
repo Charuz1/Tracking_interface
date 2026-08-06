@@ -4,9 +4,9 @@ import { usePhysicsEngine } from '../hooks/usePhysicsEngine'
 /**
  * PhysicsCanvas — renders the Matter.js antigravity simulation
  */
-export default function PhysicsCanvas({ gestureState, enabled }) {
+export default function PhysicsCanvas({ gestureState, enabled, onLetterPopped }) {
   const canvasRef = useRef(null)
-  usePhysicsEngine(canvasRef, gestureState, enabled)
+  usePhysicsEngine(canvasRef, gestureState, enabled, onLetterPopped)
 
   // Resize canvas when window resizes
   useEffect(() => {

@@ -13,8 +13,8 @@ const ORB_THEMES = [
   { fill: 'rgba(52,211,153,0.15)',  stroke: '#34d399',  glow: '#34d399',  label: 'green'  },
 ]
 
-const SHAPE_TYPES = ['circle', 'triangle', 'square', 'pentagon']
-const BODY_COUNT = 18
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+const BODY_COUNT = 15
 
 /**
  * usePhysicsEngine — Matter.js engine lifecycle & gesture interaction
@@ -22,51 +22,34 @@ const BODY_COUNT = 18
  * @param {HTMLCanvasElement} canvasRef - canvas for Matter.js render
  * @param {{ gesture, palmCenter, indexTip, swipeDir }} gestureState
  * @param {boolean} enabled
+ * @param {Function} onLetterPopped - callback when user pinches/pops a letter
  */
-export function usePhysicsEngine(canvasRef, gestureState, enabled) {
+export function usePhysicsEngine(canvasRef, gestureState, enabled, onLetterPopped) {
   const engineRef  = useRef(null)
   const renderRef  = useRef(null)
   const runnerRef  = useRef(null)
   const bodiesRef  = useRef([])
-
+  const isPinchedRef = useRef(false)
 
   // ── Spawn bodies ───────────────────────────────────────────────────
   const spawnBodies = useCallback((width, height) => {
     const bodies = []
     for (let i = 0; i < BODY_COUNT; i++) {
       const theme = ORB_THEMES[i % ORB_THEMES.length]
-      const type  = SHAPE_TYPES[i % SHAPE_TYPES.length]
-      const r     = 22 + Math.random() * 28
+      const r     = 30 + Math.random() * 5
       const x     = 80 + Math.random() * (width - 160)
       const y     = height * 0.3 + Math.random() * height * 0.5
 
-      let body
-      if (type === 'circle') {
-        body = Bodies.circle(x, y, r, {
-          restitution: 0.6,
-          friction: 0.01,
-          frictionAir: 0.008,
-          render: { fillStyle: theme.fill, strokeStyle: theme.stroke, lineWidth: 1.5 },
-        })
-      } else if (type === 'triangle') {
-        body = Bodies.polygon(x, y, 3, r, {
-          restitution: 0.5, friction: 0.01, frictionAir: 0.01,
-          render: { fillStyle: theme.fill, strokeStyle: theme.stroke, lineWidth: 1.5 },
-        })
-      } else if (type === 'square') {
-        body = Bodies.rectangle(x, y, r * 1.8, r * 1.8, {
-          restitution: 0.5, friction: 0.02, frictionAir: 0.01,
-          render: { fillStyle: theme.fill, strokeStyle: theme.stroke, lineWidth: 1.5 },
-        })
-      } else {
-        body = Bodies.polygon(x, y, 5, r, {
-          restitution: 0.55, friction: 0.01, frictionAir: 0.009,
-          render: { fillStyle: theme.fill, strokeStyle: theme.stroke, lineWidth: 1.5 },
-        })
-      }
+      const body = Bodies.circle(x, y, r, {
+        restitution: 0.6,
+        friction: 0.01,
+        frictionAir: 0.008,
+        render: { fillStyle: theme.fill, strokeStyle: theme.stroke, lineWidth: 1.5 },
+      })
 
       body._theme = theme
-      body._type  = type
+      body._letter = ALPHABET[Math.floor(Math.random() * ALPHABET.length)]
+      
       // Give random initial velocity for floaty feel
       Body.setVelocity(body, {
         x: (Math.random() - 0.5) * 2,
@@ -128,21 +111,23 @@ export function usePhysicsEngine(canvasRef, gestureState, enabled) {
     Runner.run(runner, engine)
     Render.run(render)
 
-    // After-render: draw glow labels on top
+    // After-render: draw letter labels on top
     Events.on(render, 'afterRender', () => {
       const ctx = render.context
       bodiesRef.current.forEach((body) => {
         const { x, y } = body.position
         const theme = body._theme
         if (!theme) return
-        // Glow dot at center
-        ctx.beginPath()
-        ctx.arc(x, y, 4, 0, Math.PI * 2)
-        ctx.fillStyle = theme.glow
+
+        ctx.save()
+        ctx.font = 'bold 24px "Outfit", "Inter", sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillStyle = '#ffffff'
         ctx.shadowColor = theme.glow
-        ctx.shadowBlur  = 20
-        ctx.fill()
-        ctx.shadowBlur = 0
+        ctx.shadowBlur = 15
+        ctx.fillText(body._letter || '?', x, y)
+        ctx.restore()
       })
     })
 
@@ -189,18 +174,57 @@ export function usePhysicsEngine(canvasRef, gestureState, enabled) {
     const py = palmCenter.y * H
 
     if (gesture === 'open') {
+      isPinchedRef.current = false
       applyRepulsion(bodies, { x: px, y: py }, 180, 0.03)
     } else if (gesture === 'pinch' && indexTip) {
       const tipPx = (1 - indexTip.x) * W
       const tipPy = indexTip.y * H
+
+      // Detect popping a letter
+      if (!isPinchedRef.current) {
+        let nearestBody = null
+        let minDistance = 50 // collision threshold in pixels
+
+        bodies.forEach((body) => {
+          const dx = body.position.x - tipPx
+          const dy = body.position.y - tipPy
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist < minDistance) {
+            nearestBody = body
+            minDistance = dist
+          }
+        })
+
+        if (nearestBody) {
+          isPinchedRef.current = true
+          if (onLetterPopped) {
+            onLetterPopped(nearestBody._letter)
+          }
+
+          // Respawn the popped letter body at the bottom
+          Body.setPosition(nearestBody, {
+            x: 80 + Math.random() * (W - 160),
+            y: H + 50
+          })
+          nearestBody._letter = ALPHABET[Math.floor(Math.random() * ALPHABET.length)]
+          Body.setVelocity(nearestBody, {
+            x: (Math.random() - 0.5) * 2,
+            y: -2 - Math.random() * 2,
+          })
+        }
+      }
+
       applyAttraction(bodies, { x: tipPx, y: tipPy }, 140, 0.05)
     } else if (gesture === 'swipe' && swipeDir) {
+      isPinchedRef.current = false
       applyImpulse(bodies, { x: px, y: py }, {
         dx: -swipeDir.dx, // mirror X
         dy: swipeDir.dy,
       }, 220)
+    } else {
+      isPinchedRef.current = false
     }
-  }, [gestureState, enabled])
+  }, [gestureState, enabled, onLetterPopped])
 
   return { bodiesRef }
 }

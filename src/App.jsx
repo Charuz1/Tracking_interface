@@ -11,11 +11,19 @@ const INITIAL_GESTURE = {
   swipeDir:    null,
 }
 
+const WORD_LIST = ['REACT', 'VITE', 'GESTURE', 'MOTION', 'PHYSICS', 'SPACE', 'GLOW', 'CODING', 'GRAVITY', 'CAMERA', 'BUBBLE', 'ZEROG']
+
 export default function App() {
   const [phase, setPhase]         = useState('splash')   // 'splash' | 'loading' | 'active'
   const [gestureState, setGestureState] = useState(INITIAL_GESTURE)
   const [landmarkCount, setLandmarkCount] = useState(0)
   const [error, setError]         = useState(null)
+
+  // Game states
+  const [targetWord, setTargetWord] = useState(() => WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)])
+  const [typedText, setTypedText]   = useState('')
+  const [score, setScore]           = useState(0)
+  const [isWrong, setIsWrong]       = useState(false)
 
   const gestureRef = useRef(INITIAL_GESTURE)
 
@@ -44,6 +52,41 @@ export default function App() {
       setPhase('splash')
     }
   }
+
+  // Handle typed letter
+  const handleLetterPopped = useCallback((char) => {
+    if (isWrong) return // prevent typing during error penalty flash
+
+    setTypedText((prev) => {
+      const nextText = prev + char
+      // Check if word completed
+      if (nextText === targetWord) {
+        setScore((s) => s + 10)
+        // Select next word
+        setTimeout(() => {
+          setTargetWord(WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)])
+          setTypedText('')
+        }, 300)
+        return nextText
+      }
+
+      // If typed wrong letters
+      if (!targetWord.startsWith(nextText) || nextText.length >= targetWord.length) {
+        setIsWrong(true)
+        setTimeout(() => {
+          setTypedText('')
+          setIsWrong(false)
+        }, 1000)
+      }
+      
+      return nextText
+    })
+  }, [targetWord, isWrong])
+
+  const resetGameWord = useCallback(() => {
+    setTypedText('')
+    setIsWrong(false)
+  }, [])
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'relative', background: 'var(--bg-deep)' }}>
@@ -75,15 +118,15 @@ export default function App() {
 
           {/* Subtitle */}
           <p className="splash-subtitle">
-            Interact with floating, gravity-defying digital objects — purely through your hands.
-            No controllers. No clicks. Just pure gesture.
+            Pinch floating letters to spell target words and score points!
+            Interact with antigravity letters purely through your hands.
           </p>
 
           {/* Feature chips */}
           <div className="info-chips">
-            <span className="info-chip">✋ 21 Hand Landmarks</span>
-            <span className="info-chip">🚀 Antigravity Physics</span>
-            <span className="info-chip">🌐 Browser-Native</span>
+            <span className="info-chip">✋ Hand Tracking Typing</span>
+            <span className="info-chip">🚀 Antigravity Bubbles</span>
+            <span className="info-chip">🎯 Word Spelling Game</span>
             <span className="info-chip">⚡ Real-Time AI</span>
           </div>
 
@@ -148,6 +191,7 @@ export default function App() {
           <PhysicsCanvas
             gestureState={gestureState}
             enabled={true}
+            onLetterPopped={handleLetterPopped}
           />
 
           {/* Webcam + hand skeleton overlay */}
@@ -161,6 +205,11 @@ export default function App() {
             gesture={gestureState.gesture}
             landmarkCount={landmarkCount}
             enabled={true}
+            targetWord={targetWord}
+            typedText={typedText}
+            score={score}
+            isWrong={isWrong}
+            onReset={resetGameWord}
           />
 
           {/* Cursor finger dot — follows index tip */}
