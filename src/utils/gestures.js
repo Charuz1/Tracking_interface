@@ -38,10 +38,7 @@ export function classifyGesture(landmarks, prevLandmarks = null) {
 
   const thumb = landmarks[4]
   const index = landmarks[8]
-  const middle = landmarks[12]
-  const ring   = landmarks[16]
-  const pinky  = landmarks[20]
-  const wrist  = landmarks[0]
+
 
   // ── Pinch: thumb tip close to index tip ──────────────────────────
   const pinchDist = landmarkDist(thumb, index)

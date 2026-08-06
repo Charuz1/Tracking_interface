@@ -28,7 +28,7 @@ export function usePhysicsEngine(canvasRef, gestureState, enabled) {
   const renderRef  = useRef(null)
   const runnerRef  = useRef(null)
   const bodiesRef  = useRef([])
-  const rafRef     = useRef(null)
+
 
   // ── Spawn bodies ───────────────────────────────────────────────────
   const spawnBodies = useCallback((width, height) => {

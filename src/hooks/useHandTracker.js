@@ -152,11 +152,12 @@ export function useHandTracker({ videoRef, landmarkCanvasRef, onGestureUpdate, e
     return () => {
       cancelled = true
       if (cameraRef.current) {
-        try { cameraRef.current.stop() } catch (_) {}
+        try { cameraRef.current.stop() } catch { /* ignore */ }
       }
       if (handsRef.current) {
-        try { handsRef.current.close() } catch (_) {}
+        try { handsRef.current.close() } catch { /* ignore */ }
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       cancelAnimationFrame(animFrameRef.current)
     }
   }, [enabled, videoRef, landmarkCanvasRef, onGestureUpdate, drawLandmarks])
