@@ -81,7 +81,34 @@ export default function HUD({
           </span>
         </div>
 
-        {/* Word Display Panel in the center */}
+        {/* FPS + Score + status */}
+        <div className="hud-panel" style={{ textAlign: 'right', minWidth: '130px' }}>
+          <div style={{ fontWeight: 'bold', color: 'var(--accent-gold)', fontSize: '0.9rem', marginBottom: '0.2rem', textShadow: '0 0 8px rgba(251,191,36,0.4)' }}>
+            SCORE&nbsp;<span>{score}</span>
+          </div>
+          <div>FPS&nbsp;<span ref={fpsElRef} style={{ color: '#fff' }}>--</span></div>
+          <div style={{ color: enabled ? 'var(--accent-cyan)' : 'var(--text-muted)', fontSize: '0.68rem', marginTop: '0.2rem' }}>
+            {enabled ? '● TRACKING' : '○ STANDBY'}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Bottom bar ───────────────────────────────────────────── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%' }}>
+        {/* Gesture badge */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: '190px' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.1em' }}>
+            GESTURE DETECTED
+          </span>
+          <span className={`gesture-badge ${info.color}`}>
+            {info.label}
+          </span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+            {info.desc}
+          </span>
+        </div>
+
+        {/* Word Display Panel in the bottom center */}
         <div
           className={`hud-panel glass-card ${isWrong ? 'shake' : ''}`}
           style={{
@@ -149,33 +176,6 @@ export default function HUD({
               Reset ⟲
             </button>
           </div>
-        </div>
-
-        {/* FPS + Score + status */}
-        <div className="hud-panel" style={{ textAlign: 'right', minWidth: '130px' }}>
-          <div style={{ fontWeight: 'bold', color: 'var(--accent-gold)', fontSize: '0.9rem', marginBottom: '0.2rem', textShadow: '0 0 8px rgba(251,191,36,0.4)' }}>
-            SCORE&nbsp;<span>{score}</span>
-          </div>
-          <div>FPS&nbsp;<span ref={fpsElRef} style={{ color: '#fff' }}>--</span></div>
-          <div style={{ color: enabled ? 'var(--accent-cyan)' : 'var(--text-muted)', fontSize: '0.68rem', marginTop: '0.2rem' }}>
-            {enabled ? '● TRACKING' : '○ STANDBY'}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Bottom bar ───────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        {/* Gesture badge */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.1em' }}>
-            GESTURE DETECTED
-          </span>
-          <span className={`gesture-badge ${info.color}`}>
-            {info.label}
-          </span>
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-            {info.desc}
-          </span>
         </div>
 
         {/* Legend */}
