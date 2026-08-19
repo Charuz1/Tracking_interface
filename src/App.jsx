@@ -24,6 +24,7 @@ export default function App() {
   const [typedText, setTypedText]   = useState('')
   const [score, setScore]           = useState(0)
   const [isWrong, setIsWrong]       = useState(false)
+  const [isWordCompleted, setIsWordCompleted] = useState(false)
 
   const gestureRef = useRef(INITIAL_GESTURE)
 
@@ -55,7 +56,7 @@ export default function App() {
 
   // Handle typed letter
   const handleLetterPopped = useCallback((char) => {
-    if (isWrong) return // prevent typing during error penalty flash
+    if (isWrong || isWordCompleted) return // prevent typing during penalty or win overlay
 
     setTypedText((prev) => {
       // Check if this letter is the correct next character in the target word
@@ -66,11 +67,7 @@ export default function App() {
         // Check if word completed
         if (nextText === targetWord) {
           setScore((s) => s + 10)
-          // Select next word
-          setTimeout(() => {
-            setTargetWord(WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)])
-            setTypedText('')
-          }, 300)
+          setIsWordCompleted(true)
         }
         return nextText
       } else {
@@ -82,11 +79,18 @@ export default function App() {
         return prev
       }
     })
-  }, [targetWord, isWrong])
+  }, [targetWord, isWrong, isWordCompleted])
+
+  const handleNextWord = useCallback(() => {
+    setIsWordCompleted(false)
+    setTypedText('')
+    setTargetWord(WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)])
+  }, [])
 
   const resetGameWord = useCallback(() => {
     setTypedText('')
     setIsWrong(false)
+    setIsWordCompleted(false)
   }, [])
 
   return (
@@ -221,6 +225,58 @@ export default function App() {
               y={gestureState.indexTip.y * window.innerHeight}
               gesture={gestureState.gesture}
             />
+          )}
+
+          {/* Win Modal Overlay */}
+          {isWordCompleted && (
+            <div
+              className="winner-modal glass-card letter-pop"
+              style={{
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 40,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '1.25rem',
+                padding: '2rem 3.5rem',
+                background: 'rgba(10, 10, 31, 0.9)',
+                border: '2px solid var(--accent-cyan)',
+                boxShadow: '0 0 40px rgba(0, 245, 255, 0.4)',
+                borderRadius: '16px',
+                pointerEvents: 'auto',
+                textAlign: 'center',
+              }}
+            >
+              <span style={{ fontSize: '3.5rem', display: 'inline-block', transform: 'scale(1.2)' }}>🏆</span>
+              <h2 style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: '2.25rem',
+                fontWeight: 800,
+                background: 'linear-gradient(135deg, #00f5ff 0%, #a855f7 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                margin: '0.2rem 0'
+              }}>
+                YOU WIN!
+              </h2>
+              <p style={{ color: 'var(--text-primary)', fontSize: '1rem', fontFamily: 'var(--font-mono)' }}>
+                Spelled: <span style={{ color: 'var(--accent-gold)', fontWeight: 'bold' }}>{targetWord}</span>
+              </p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                +10 Points Added!
+              </p>
+              <button
+                onClick={handleNextWord}
+                className="btn-glow"
+                style={{ padding: '0.6rem 2.2rem', fontSize: '0.85rem', marginTop: '0.5rem' }}
+              >
+                Next Word ➔
+              </button>
+            </div>
           )}
         </>
       )}
