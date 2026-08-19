@@ -263,9 +263,6 @@ export default function App() {
               }}>
                 YOU WIN!
               </h2>
-              <p style={{ color: 'var(--text-primary)', fontSize: '1rem', fontFamily: 'var(--font-mono)' }}>
-                Spelled: <span style={{ color: 'var(--accent-gold)', fontWeight: 'bold' }}>{targetWord}</span>
-              </p>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                 +10 Points Added!
               </p>
